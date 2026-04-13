@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>자리 배치</title>
+
+<style>
+body {
+    background:#111;
+    color:white;
+    text-align:center;
+    font-family:sans-serif;
+}
+
+.grid {
+    display:grid;
+    gap:12px;
+    justify-content:center;
+    margin-top:30px;
+}
+
+.cell {
+    width:100px;
+    height:65px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#222;
+    cursor:pointer;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.cell.off {
+    background:#000;
+}
+
+.top { margin:15px; }
+
+input {
+    width:70px;
+    padding:6px;
+    background:#222;
+    color:white;
+    border:none;
+    border-radius:6px;
+    text-align:center;
+    font-size:16px;
+}
+
+button {
+    margin:10px;
+    padding:10px 18px;
+    background:#333;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+}
+
+#countdown {
+    font-size:50px;
+    margin-top:20px;
+    color:#00ffaa;
+    height:60px;
+}
+
+#warning {
+    color:#ff4444;
+    font-size:18px;
+    height:24px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>자리 배치</h2>
+
+<div class="top">
+행 <input id="rows" type="number" value="6">
+열 <input id="cols" type="number" value="6">
+인원 <input id="count" type="number" value="40">
+</div>
+
+<button onclick="start()">배치 시작</button>
+
+<div id="warning"></div>
+<div id="countdown"></div>
+<div id="grid" class="grid"></div>
+
+<script>
+let grid = [];
+
+const rowsInput = document.getElementById("rows");
+const colsInput = document.getElementById("cols");
+const warning = document.getElementById("warning");
+
+rowsInput.addEventListener("input", create);
+colsInput.addEventListener("input", create);
+
+function create(){
+    const r = +rowsInput.value;
+    const c = +colsInput.value;
+
+    grid = Array(r*c).fill(true);
+
+    const g = document.getElementById("grid");
+    g.innerHTML="";
+    g.style.gridTemplateColumns = `repeat(${c},100px)`;
+
+    for(let i=0;i<grid.length;i++){
+        const div=document.createElement("div");
+        div.className="cell";
+
+        div.onclick=()=>{
+            grid[i]=!grid[i];
+            div.classList.toggle("off", !grid[i]);
+            div.textContent="";
+        };
+
+        g.appendChild(div);
+    }
+}
+
+function shuffle(a){
+    for(let i=a.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+    }
+}
+
+function start(){
+    let seats=[];
+    grid.forEach((v,i)=>{
+        if(v) seats.push(i);
+    });
+
+    const count = +document.getElementById("count").value;
+
+    if(seats.length < count){
+        warning.textContent = "자리가 부족합니다";
+        return;
+    } else {
+        warning.textContent = "";
+    }
+
+    let sec = 3;
+    const cd = document.getElementById("countdown");
+
+    cd.textContent = sec;
+
+    const timer = setInterval(() => {
+        sec--;
+        cd.textContent = sec > 1 ? sec : "1";
+
+        if(sec < 1){
+            clearInterval(timer);
+            cd.textContent = "";
+            generate(seats, count);
+        }
+    }, 1000);
+}
+
+function generate(seats, count){
+    let nums=Array.from({length:count},(_,i)=>i+1);
+    shuffle(nums);
+
+    let result=Array(grid.length).fill("");
+
+    let i=0;
+    for(let s of seats){
+        result[s]=nums[i++]||"";
+    }
+
+    render(result);
+}
+
+function render(result){
+    const cells=document.querySelectorAll(".cell");
+
+    cells.forEach((c,i)=>{
+        c.textContent = grid[i] ? (result[i]||"") : "";
+    });
+}
+
+create();
+</script>
+
+</body>
+</html>
